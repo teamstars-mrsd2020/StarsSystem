@@ -1,0 +1,3 @@
+[submodule "StarsDataProcessing/detector"]
+	path = StarsDataProcessing/detector
+	url = https://github.com/teamstars-mrsd2020/detector.git
