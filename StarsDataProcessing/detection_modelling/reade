@@ -1,0 +1,4 @@
+traininground1 - first round of training done on 8th/9th April. This model is currently in the detector
+traininground2 - second round done on the original dataset, this has the model and metrics on the  old dataset
+traininground3 - new dataset(subset), this model is quite accurate, only trained for around 3000 iterations
+traininground4 - new dataset(full dataset the '2' files), good model, trained for aruond 6000 iterations, better than round 3 model
