@@ -16,8 +16,8 @@ from detectron2.structures.boxes import BoxMode
 from detectron2.checkpoint.detection_checkpoint import DetectionCheckpointer
 from detectron2.engine import DefaultPredictor
 
-from json_utils import NumpyEncoder
-from stars_config import getEvalCfg
+from .json_utils import NumpyEncoder
+from .stars_config import getEvalCfg
 
 import time
 import matplotlib.pyplot as plt
@@ -234,16 +234,21 @@ class StarsEvaluator:
         self,
         model,
         classes_list,
-        train_json,
-        val_json,
+        train_json=None,
+        val_json=None,
         batch_size=8,
         confidence_thres=0.7,
         iou_thres=0.5,
         model_input_format="BGR",
         progress_bar=True,
+        iterative_evaluation=False
     ):
-        self.train_dataset = self.get_data_dicts(train_json)
-        self.test_dataset = self.get_data_dicts(val_json)
+        if not iterative_evaluation:
+            self.train_dataset = self.get_data_dicts(train_json)
+            self.test_dataset = self.get_data_dicts(val_json)
+        else:
+            self.train_dataset = None
+            self.test_dataset = None
         self.model = model
         self.classes_list = classes_list
         self.batch_size = batch_size
@@ -472,7 +477,7 @@ class StarsEvaluator:
 
 
 def prepareEvaluator(
-    confidence_thres=0.7, iou_thres=0.5, chkpts_file="outputmodel_final.pth",
+    confidence_thres=0.7, iou_thres=0.5, chkpts_file="outputmodel_final.pth",iterative_evaluation=False
 ):
     classes_dict = {0: "vehicle", 1: "bike", 2: "pedestrian"}
     # # create cfg
@@ -484,14 +489,23 @@ def prepareEvaluator(
     model.eval()
     DetectionCheckpointer(model).load(chkpts_file)
 
-    evaluator = StarsEvaluator(
-        model,
-        list(classes_dict.values()),
-        "stars_carla_train.json",
-        "stars_carla_val.json",
-        iou_thres=iou_thres,
-        confidence_thres=confidence_thres,
-    )
+    if iterative_evaluation:
+        evaluator = StarsEvaluator(
+            model,
+            list(classes_dict.values()),
+            iou_thres=iou_thres,
+            confidence_thres=confidence_thres,
+            iterative_evaluation=True
+        )
+    else:
+        evaluator = StarsEvaluator(
+            model,
+            list(classes_dict.values()),
+            "stars_carla_train.json",
+            "stars_carla_val.json",
+            iou_thres=iou_thres,
+            confidence_thres=confidence_thres,
+        )
 
     return evaluator
 
