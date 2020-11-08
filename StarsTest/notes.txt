@@ -1,0 +1,16 @@
+py.test -k test_fn_name -sv --run 2
+py.test test_file_name -sv --run 1
+
+
+py.test -k test_carla_params_verification -sv --run 2
+
+
+pytest -sv test_stars_data_proc.py --run 2
+py.test -k test_get_TL_status -sv
+
+
+Commands to run Test 4: Carla Params test_carla_params_verification
+
+cd StarsSystem/StarsTest
+export DISPLAY=:1
+pytest -k test_4 -sv --run 1

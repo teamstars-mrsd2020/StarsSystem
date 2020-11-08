@@ -1,0 +1,22 @@
+{
+    "run_id" : 3,
+    "video": "../data/videos/c_002_000_001.mp4",
+    "video_2": "../data/videos/c_002_002_001.mp4",
+    "HD_map" : "../data/HDMaps/c_002",
+    "intersection_config": "../data/configs/intersection_config/c_002_000.json",
+    "intersection_config_2": "../data/configs/intersection_config/c_002_002.json",
+    "behavior_config": "../data/configs/behavior_config/moderate_town.json",
+    "carla_config" : "../data/configs/carla_config.json",
+    "TL_status" : "../data/TL_status/c_002_000_001.csv",
+    "TL_status_2" : "../data/TL_status/c_002_002_001.csv",
+    "TL_status_combined" : "../data/TL_status/c_002_020_001.csv",
+    "trajectory_pred": "../data/trajectories/c_002_000_001.csv",
+    "trajectory_pred_2": "../data/trajectories/c_002_002_001.csv",
+    "trajectory_pred_combined": "../data/trajectories/c_002_020_001.csv",
+    "trajectory_gt" : "../data/trajectories/cgt_002_020_001.csv",
+    "params_pred": "../data/params/cpred_002_020_001.json",
+    "params_gt": "../data/params/cgt_002_020_001.json",
+    "detection_gt": "../data/metadata/frame_wise/c_002_000_001",
+    "duration": 0.5,
+    "Description": "First Intersection, 30 sec video, params: "
+}

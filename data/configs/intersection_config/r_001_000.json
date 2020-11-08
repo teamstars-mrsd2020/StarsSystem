@@ -1,0 +1,13 @@
+{
+    "intersection_id": 1, 
+    "side" : 0,
+    "type": "real_world",
+    "bboxes":[
+        [2908, 759, 36, 67],
+        [1167, 783, 35, 73],
+        [3141, 742, 37, 72],
+        [1314, 790, 32, 68]
+    ],
+    "traffic_light_id" : 0,
+    "desc": "fifth_craig_1"
+}

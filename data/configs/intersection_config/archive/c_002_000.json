@@ -1,0 +1,7 @@
+{
+    "bboxes":[],
+    "intersection_id": 2, 
+    "side" : 0,
+    "type": "carla",
+    "traffic_light_id" : 45
+}

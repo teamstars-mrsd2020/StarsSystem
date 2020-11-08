@@ -1,0 +1,14 @@
+{
+    "tm_port": 8000,
+    "hybrid" : false,
+    "number_of_vehicles": 100,
+    "number_of_walkers": 0,
+    "global_distance_to_leading_vehicle" : 5,
+    "percentageTrafficBreakingLight": 100,
+    "ignore_lights_percentage" : 80.0,
+    "percentagePedestriansCrossing" : 50,
+    "percentagePedestriansRunning" : 50,
+    "percentageTrafficBreakingSpeedLimit": 0,
+    "vehicle_percentage_speed_difference": -100,
+    "global_percentage_speed_difference" : 0
+}
