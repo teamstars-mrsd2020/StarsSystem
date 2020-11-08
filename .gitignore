@@ -1,8 +1,9 @@
 # our rules
+data/*
 !data/configs
 !data/runs
 !data/HDMaps
-data/*
+
 *.mp4
 # File created using '.gitignore Generator' for Visual Studio Code: https://bit.ly/vscode-gig
 
