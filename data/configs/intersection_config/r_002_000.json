@@ -1,0 +1,9 @@
+{
+    "intersection_id": 2, 
+    "side" : 0,
+    "type": "real_world",
+    "bboxes":[],
+    "traffic_light_id" : 0,
+    "location": "fifth_craig_1",
+    "desc" : "Second Day" 
+}

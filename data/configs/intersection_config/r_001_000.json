@@ -9,5 +9,7 @@
         [1314, 790, 32, 68]
     ],
     "traffic_light_id" : 0,
-    "desc": "fifth_craig_1"
+    "location": "fifth_craig_1",
+    "desc": "First Day"
+
 }

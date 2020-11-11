@@ -1,8 +1,11 @@
 {
     "intersection_id":1,
     "side":0,
-    "bboxes":[],
     "type":"carla",
     "traffic_light_id":46,
-    "neighbors" : [46,47,48,49]
+    "neighbors" : [46,47,48,49],
+    "bboxes":[
+        [658, 402, 17, 35],
+        [1457, 400, 14, 41]
+    ]
 }
