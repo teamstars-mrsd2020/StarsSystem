@@ -1,13 +1,13 @@
 {
   "params":{
     "realtime_display": true,
-    "use_stored_detections": true,
+    "use_stored_detections": false,
     "save_detections": false,
-    "use_traj_file": true,
+    "use_traj_file": false,
     "smooth_trajectories": false,
     "save_traj_file": false,
     "filter_traj": true,
-    "evaluate_tracker": true,
+    "evaluate_tracker": false,
     "camera_view_offset": 20,
     "det_model":"stars",
     "det_conf_thresh": 0.8,

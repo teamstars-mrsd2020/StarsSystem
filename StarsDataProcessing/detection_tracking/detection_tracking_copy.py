@@ -1,4 +1,4 @@
-# from . import _init_paths
+from . import _init_paths
 
 import json
 import utils.dp_utils
@@ -11,7 +11,8 @@ from detectron2.utils.logger import setup_logger
 from detectron2.utils.visualizer import Visualizer
 from detectron2.data import MetadataCatalog
 from .utils import fvd_util
-from bev_tracker.filter_track_linear_sum import *
+
+# from bev_tracker.filter_track_linear_sum import *
 from bev_tracker import tracker_eval
 from utils.tracker_utils import *
 from shapely.geometry import Point
@@ -409,11 +410,6 @@ class DataProcessing:
         motp = None
         tracks = None
         bev_view = self.bev_image
-        cv2.imshow("bev", bev_view)
-        cv2.waitKey()
-        import ipdb
-
-        ipdb.set_trace()
         result = {"objects": []}  # might be unused in case raw data is available
 
         # --------- progress bar -------------------------
@@ -464,6 +460,7 @@ class DataProcessing:
                     pre_filtered_tracks = pre_filter(tracks, True)
 
                     if self.params["filter_traj"]:
+
                         tracks, tracked_agents_history = self.bev_tracker.tracker(
                             pre_filtered_tracks
                         )
@@ -511,6 +508,14 @@ class DataProcessing:
                     bev_view = self.render_trajectories(
                         self.bev_image.copy(), self.pbar.n, tracked_agents_history
                     )
+                    # bev_view = dp_utils.renderhomography(
+                    #     tracks,
+                    #     gt_tracks,
+                    #     tracked_agents_history,
+                    #     self.bev_image.copy(),
+                    #     self.bev_boundary,
+                    #     self.params["evaluate_tracker"],
+                    # )
 
                 # final frame
                 joined_view = dp_utils.join_views(

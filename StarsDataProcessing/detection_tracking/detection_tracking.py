@@ -1,4 +1,4 @@
-# from . import _init_paths
+from . import _init_paths
 
 import json
 import utils.dp_utils
@@ -7,22 +7,26 @@ import cv2
 import os
 from tqdm import tqdm
 from copy import deepcopy
-from detectron2.utils.logger import setup_logger
-from detectron2.utils.visualizer import Visualizer
-from detectron2.data import MetadataCatalog
+
+# from detectron2.utils.logger import setup_logger
+# from detectron2.utils.visualizer import Visualizer
+# from detectron2.data import MetadataCatalog
 from .utils import fvd_util
-from bev_tracker.filter_track_linear_sum import *
-from bev_tracker import tracker_eval
+
+# from bev_tracker.filter_track_linear_sum import *
+# from bev_tracker import tracker_eval
 from utils.tracker_utils import *
 from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
-from IPython import embed
+
+# from IPython import embed
 from bev_tracker.tracking import BevTracker
 
 
 # from detector import Detector
-# from CenterTrack.src.center_track import Detector
-from detector import Detector
+from CenterTrack.src.center_track import Detector
+
+# from detector import Detector
 
 
 # from mapping import visualize_stars_lane_map
