@@ -1,0 +1,14 @@
+{
+"FPS":60,
+"no_see_thresh":90,
+"min_see_thresh":2  ,
+"vel_weight":0.5,
+"pos_weight":1.0,
+"max_vel":1.3,
+"max_acc":0.3,
+"theta_thresh":0.1,
+"map_file":"/home/stars/Code/detector/data/map/bev_fifth_craig.starsjson",
+"use_map_prior":"True",
+"gating_threshold":70,
+"dt":1
+}
