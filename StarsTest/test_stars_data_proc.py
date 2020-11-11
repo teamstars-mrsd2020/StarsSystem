@@ -21,6 +21,7 @@ import pandas as pd
 import sys
 sys.path.append("../")
 sys.path.append("../StarsDataProcessing/detection_tracking/")
+sys.path.append("../StarsDataProcessing/detection_tracking/")
 
 def get_config(run):
     with open("../data/runs/run_" + str(run) + ".json") as f:
@@ -37,6 +38,14 @@ def check_file_and_size(file_path):
         return True
     else:
         return False
+
+def combine(file1, file2):
+    traj_1 = pd.read_csv(file1)
+    traj_2 = pd.read_csv(file2)
+
+    combined = pd.concat([traj_1, traj_1], axis=0, join='inner')
+
+    return combined
 
 # @pytest.mark.incremental
 class TestSTARSDataProc:
@@ -60,9 +69,9 @@ class TestSTARSDataProc:
     
     def test_get_trajectory(self, run):
         
-        from StarsDataProcessing.detection_tracking.detection_tracking import detection_tracking
+        from StarsDataProcessing.detection_tracking.detection_tracking_copy import detection_tracking
         
-        # sys.path.append("../StarsDataProcessing/detection_tracking")
+        sys.path.append("../StarsDataProcessing/detection_tracking")
         cfg = get_config(run)
         detection_tracking(cfg)
         assert check_file_and_size(cfg["trajectory_pred"])
@@ -74,10 +83,11 @@ class TestSTARSDataProc:
         assert check_file_and_size(cfg["trajectory_pred"])
 
         #combine both
-        # cfg = get_config(run)
+        cfg = get_config(run)
 
-        # combine(cfg["trajectory_pred"], cfg["trajectory_pred_2"])
-        # assert check_file_and_size(cfg["trajectory_pred_combined"])
+        traj_combined = combine(cfg["trajectory_pred"], cfg["trajectory_pred_2"])
+        traj_combined.to_csv(cfg["trajectory_pred_combined"], index=False)
+        assert check_file_and_size(cfg["trajectory_pred_combined"])
 
 
     def test_get_TL_status(self, run):
@@ -96,26 +106,26 @@ class TestSTARSDataProc:
 
         assert check_file_and_size(csv_save_path)
         
-        if int(run) >= 20:
-            video_path = cfg["video_2"]
-            csv_save_path = cfg["TL_status_2"]
-            intersection_cfg_path = cfg["intersection_config_2"]
-            intersection_cfg = get_config_file(intersection_cfg_path)
-            bboxes = intersection_cfg["bboxes"]
-            get_TL_status(video_path, bboxes, csv_save_path, second_TL=True, debug=False)
-            
-            assert check_file_and_size(csv_save_path)
+        # if int(run) >= 20:
+        video_path = cfg["video_2"]
+        csv_save_path = cfg["TL_status_2"]
+        intersection_cfg_path = cfg["intersection_config_2"]
+        intersection_cfg = get_config_file(intersection_cfg_path)
+        bboxes = intersection_cfg["bboxes"]
+        get_TL_status(video_path, bboxes, csv_save_path, second_TL=True, debug=False)
+        
+        assert check_file_and_size(csv_save_path)
 
-            # combine both of them 
-            
-            df_1 = pd.read_csv(cfg["TL_status"])
-            df_2 = pd.read_csv(cfg["TL_status_2"])
-            df = pd.concat([df_1, df_2], ignore_index=True, copy=True)
-            df = df.sort_values(by="frame_id", ignore_index=True)
-            df = df.drop(df.columns[0], axis=1)
-            df.to_csv(cfg["TL_status_combined"])
+        # combine both of them 
+        
+        df_1 = pd.read_csv(cfg["TL_status"])
+        df_2 = pd.read_csv(cfg["TL_status_2"])
+        df = pd.concat([df_1, df_2], ignore_index=True, copy=True)
+        df = df.sort_values(by="frame_id", ignore_index=True)
+        df = df.drop(df.columns[0], axis=1)
+        df.to_csv(cfg["TL_status_combined"])
 
-            assert check_file_and_size(cfg["TL_status_combined"])
+        assert check_file_and_size(cfg["TL_status_combined"])
 
 
     def test_get_TLV(self, run):
@@ -138,28 +148,29 @@ class TestSTARSDataProc:
         # os.remove(cfg["params_pred"])
         
         # if int(run)>=20:
-        #     cfg["TL_status"] = cfg["TL_status_2"]
-        #     cfg["trajectory_pred"] = cfg["trajectory_pred_2"] 
+        """
+        cfg["TL_status"] = cfg["TL_status_2"]
+        cfg["trajectory_pred"] = cfg["trajectory_pred_2"] 
 
-        #     num2, denom2 = tlv(cfg)
-        #     if check_file_and_size(cfg["params_pred"]):
-        #         with open(cfg["params_pred"], 'r') as f:
-        #             params = json.load(f)
-        #     else:
-        #         params = {}
+        num2, denom2 = tlv(cfg)
+        if check_file_and_size(cfg["params_pred"]):
+            with open(cfg["params_pred"], 'r') as f:
+                params = json.load(f)
+        else:
+            params = {}
 
-        #     num = num1 + num2
-        #     denom = denom1 + denom2
+        num = num1 + num2
+        denom = denom1 + denom2
 
-        #     if denom != 0:
-        #         params["TLV"] = 100*num/denom
-        #     else:
-        #         params["TLV"] = 0.0
-            
-        #     with open(cfg["params_pred"], 'w') as f:
-        #         json.dump(params, f, indent=4)
+        if denom != 0:
+            params["TLV"] = 100*num/denom
+        else:
+            params["TLV"] = 0.0
+        
+        with open(cfg["params_pred"], 'w') as f:
+            json.dump(params, f, indent=4)
 
-        assert check_file_and_size(cfg["params_pred"])
+        assert check_file_and_size(cfg["params_pred"])"""
         assert "TLV" in get_config_file(cfg["params_pred"])
 
 
@@ -179,19 +190,20 @@ class TestSTARSDataProc:
         with open(cfg['params_pred'],"w") as f:
             json.dump(params,f)
 
-        # if int(run)>=20:
-        #     df = pd.read_csv(cfg['trajectory_pred_2'])
-        #     assert 'lane_id' in df.columns, "Missing lane_id column in trajectory_preds"
-        #     from StarsDataProcessing import extract_params
-        #     lvd_stats2 = extract_params.get_global_stats(df)
-        #     if check_file_and_size(cfg['params_pred']):
-        #         with open(cfg['params_pred']) as f:
-        #             params = json.load(f)
-        #     else:
-        #         params = {}
-        #     params['LVD']=min(lvd_stats,lvd_stats2)
-        #     with open(cfg['params_pred'],"w") as f:
-        #         json.dump(params,f)
+        # df = pd.read_csv(cfg['trajectory_pred_2'])
+        # assert 'lane_id' in df.columns, "Missing lane_id column in trajectory_preds"
+        # from StarsDataProcessing import extract_params
+        # lvd_stats2 = extract_params.get_global_stats(df)
+        # if check_file_and_size(cfg['params_pred']):
+        #     with open(cfg['params_pred']) as f:
+        #         params = json.load(f)
+        # else:
+        #     params = {}
+        # params['LVD']["min_lvd_global"]= min(lvd_stats["min_lvd_global"], lvd_stats2["min_lvd_global"])
+        # params['LVD']["mean_lvd_global"]= (lvd_stats["mean_lvd_global"] + lvd_stats2["mean_lvd_global"])/2
+
+        # with open(cfg['params_pred'],"w") as f:
+        #     json.dump(params,f)
 
         assert "LVD" in get_config_file(cfg["params_pred"])
     

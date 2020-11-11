@@ -10,5 +10,6 @@
     "vehicle_percentage_speed_difference": 0,
     "global_percentage_speed_difference" : 0,
     "percentagePedestriansCrossing" : 0,
-    "percentagePedestriansRunning" : 0
+    "percentagePedestriansRunning" : 0,
+    "simulation_time" : 30
 }

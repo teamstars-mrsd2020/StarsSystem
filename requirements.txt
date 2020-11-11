@@ -1,0 +1,8 @@
+cython
+numpy
+torch==1.4.0
+torchvision==0.5.0
+opencv-python==4.1.2.30
+numba==0.47
+scikit-learn==0.22.1
+filterpy==1.4.5
