@@ -10,6 +10,7 @@
     ],
     "traffic_light_id" : 0,
     "location": "fifth_craig_1",
-    "desc": "First Day"
+    "desc": "First Day",
+    "eval" : 0
 
 }

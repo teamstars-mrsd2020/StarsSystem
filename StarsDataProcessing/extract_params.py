@@ -5,6 +5,8 @@ import pandas as pd
 import numpy as np
 import math
 from IPython import embed
+import copy
+import cv2
 
 # import parse_trajectories
 
@@ -58,6 +60,113 @@ def get_trajectory_length(agent_df: pd.DataFrame):
 
     return np.sum(np.sqrt(dist_array))
 
+def get_global_stats_with_visualization(df: pd.DataFrame, bev_image):
+    fourcc = cv2.VideoWriter_fourcc(*'MP4V')
+    out = cv2.VideoWriter("LVD_Video.mp4", fourcc, 20.0, (bev_image.shape[1], bev_image.shape[0]))
+    
+    TEXT_FACE = cv2.FONT_HERSHEY_DUPLEX
+    TEXT_SCALE = 1
+    TEXT_THICKNESS = 2
+
+    groups = df.groupby("frame_id").groups
+    frame_ids = sorted(list(groups.keys()))
+    lvd_arr = []
+    min_dist = 1000
+    for frame_id in frame_ids:
+        birdview = copy.deepcopy(bev_image)
+        frame_df = df.iloc[groups[frame_id]]
+
+        lvd_arr += calc_frame_level_lead_vehicles_dist(frame_df, frame_id)
+        # print(lvd_arr)
+        if len(lvd_arr)>0:
+            lvd_df_temp = pd.DataFrame(
+                lvd_arr,
+                columns=[
+                    "frame_id",
+                    "agent_id",
+                    "lead_vehicle_id",
+                    "distance",
+                    "agent_x",
+                    "agent_y",
+                    "other_x",
+                    "other_y",
+                ],
+            )
+            min_dist = lvd_df_temp.distance.min()#min(min_dist, lvd_arr[-1][3])
+            lvd_df_temp = lvd_df_temp[lvd_df_temp.frame_id == frame_id]
+        #     min_dist = min(lvd_arr)
+            # print(min_dist)
+            cv2.putText(
+                birdview,
+                "LVD: {0:.2f}".format(min_dist/9.5) +"m",
+                (900, 30),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.75,
+                (255, 255, 255),
+                2,
+                cv2.LINE_AA,
+            )
+            # cv2.
+            # cv2.line() 
+            for idx,row in lvd_df_temp.iterrows():
+                p1 = (int(row.agent_x),int(row.agent_y))
+                p2 = (int(row.other_x),int(row.other_y))
+                dist = row.distance
+                if(dist==min_dist):
+                    color = (0,0,255)
+                    thickness = 3
+                else:
+                    color = (0,255,0)
+                    thickness = 2
+                cv2.line(birdview, p1, p2, color, thickness)
+
+            # Draw green line for all vehicles
+            # color the "min" line Red and make it thicker
+        else:
+            cv2.putText(
+            birdview,
+            "No pair detected",
+            (800, 30),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.75,
+            (255, 255, 255),
+            2,
+            cv2.LINE_AA,)
+        
+        unique_agents = frame_df.agent_id.unique()
+        for id in unique_agents:
+            # print(id)
+            agent = frame_df[frame_df.agent_id == id].iloc[0]
+            cv2.circle(birdview, (int(agent.x),int(agent.y)), 5, ((50.0*id)%256,(2.0*id)%256,0), -1)
+            cv2.putText(birdview, str(int(agent.agent_id)), (int(agent.x),int(agent.y)), TEXT_FACE, TEXT_SCALE, (127,255,127), TEXT_THICKNESS, cv2.LINE_AA)
+
+        out.write(birdview)
+        if cv2.waitKey(25) & 0xFF == ord("q"):
+            break
+    out.release()
+    lvd_df = pd.DataFrame(
+        lvd_arr,
+        columns=[
+            "frame_id",
+            "agent_id",
+            "lead_vehicle_id",
+            "distance",
+            "agent_x",
+            "agent_y",
+            "other_x",
+            "other_y",
+        ],
+    )
+    lvd_df.to_csv("lvd_debug_df.csv")
+    # the following lines avoid vehicle A->B and B->A matching errors in the same frame and drops them since the distance values are duplicates and we only need one
+    lvd_df["min_agent_id"] = lvd_df[["agent_id", "lead_vehicle_id"]].min(axis=1)
+    lvd_df["max_agent_id"] = lvd_df[["agent_id", "lead_vehicle_id"]].max(axis=1)
+    lvd_df_filtered = lvd_df.drop_duplicates(
+        subset=["frame_id", "min_agent_id", "max_agent_id"]
+    )
+    mean_lvd_global = lvd_df_filtered.distance.mean()  # per frame and per agent
+    min_lvd_global = lvd_df_filtered.distance.min()
+    return {"mean_lvd_global": mean_lvd_global, "min_lvd_global": min_lvd_global}
 
 def get_global_stats(df: pd.DataFrame):
     lvd_df = calc_mean_leading_vehicle_dist(df)
@@ -134,7 +243,6 @@ def calc_frame_level_lead_vehicles_dist(frame_df: pd.DataFrame, frame_id):
     # for each agent, query for another agent who matches the following criteria
     # direction of velocity is the same (within 20 to -20)
     # radius tolerance
-
     unique_agents = frame_df.agent_id.unique()
     res = []
     for id in unique_agents:
@@ -237,7 +345,8 @@ def is_lead_vehicle(
     base_v = np.array(base_v)
     other_pos = np.array(other_pos)
     other_v = np.array(other_v)
-
+    if base_lane == -1 or other_lane == -1:  ## ignore vehicles on intersections
+        return False
     # Absolute distance should be in a given range
     dist = np.linalg.norm(other_pos - base_pos)
     # check same lane through maps

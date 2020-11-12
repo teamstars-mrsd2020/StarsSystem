@@ -13,6 +13,6 @@
     "trajectory_pred": "../data/trajectories/r_002_000_001.csv",
     "trajectory_pred_2": "../data/trajectories/r_002_002_001.csv",
     "trajectory_pred_combined": "../data/trajectories/r_002_020_001.csv",
-    "params_pred": "../data/params/r_002_020_001.json",
+    "params_pred": "../data/params/rpred_002_020_001.json",
     "Description": "Real world intersection, second day"
 }

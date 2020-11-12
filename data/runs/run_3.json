@@ -13,7 +13,7 @@
     "trajectory_pred": "../data/trajectories/c_002_000_001.csv",
     "trajectory_pred_2": "../data/trajectories/c_002_002_001.csv",
     "trajectory_pred_combined": "../data/trajectories/c_002_020_001.csv",
-    "trajectory_gt" : "../data/trajectories/cgt_002_020_001.csv",
+    "trajectory_gt" : "../data/trajectories/cgt_002_000_001.csv",
     "params_pred": "../data/params/cpred_002_020_001.json",
     "params_gt": "../data/params/cgt_002_020_001.json",
     "detection_gt": "../data/metadata/frame_wise/c_002_000_001",

@@ -3,9 +3,11 @@
     "side" : 2,
     "type": "real_world",
     "bboxes":[
-
+        [1487, 386, 13, 37],
+        [568, 393, 11, 30]
     ],
+    "eval": 0,
     "traffic_light_id" : 2,
-    "location": "fifth_craig_1",
+    "location": "oct_25_fifth_craig_2",
     "desc" : "Second Day"
 }

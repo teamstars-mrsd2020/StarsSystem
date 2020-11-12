@@ -4,5 +4,6 @@
     "bboxes":[],
     "type":"carla",
     "traffic_light_id":53,
-    "neighbors" : [50,51,52,53]
+    "neighbors" : [50,51,52,53],
+    "eval": 0
 }

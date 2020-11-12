@@ -2,8 +2,12 @@
     "intersection_id": 2, 
     "side" : 0,
     "type": "real_world",
-    "bboxes":[],
+    "bboxes":[
+        [1537, 481, 21, 39],
+        [550, 484, 16, 38]
+    ],
     "traffic_light_id" : 0,
-    "location": "fifth_craig_1",
+    "location": "oct_25_fifth_craig_1",
+    "eval": 0,
     "desc" : "Second Day" 
 }
