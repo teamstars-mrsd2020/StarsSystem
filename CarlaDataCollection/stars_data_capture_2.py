@@ -981,6 +981,7 @@ class BasicSynchronousClient(object):
                 + "_"
                 + str(self.round_).zfill(3)
             )
+
             if not os.path.exists(output_folder1):
                 os.makedirs(output_folder1)
                 output_folder1_files = glob.glob(output_folder1)
@@ -990,6 +991,8 @@ class BasicSynchronousClient(object):
                     raise Exception(
                         f"Found {len(output_folder1_files)} files in {output_folder1}, please manually clean it up and rerun"
                     )
+
+                """
 
             output_folder2 = (
                 self.output_folder
@@ -1010,6 +1013,7 @@ class BasicSynchronousClient(object):
                     raise Exception(
                         f"Found {len(output_folder2_files)} files in {output_folder2}, please manually clean it up and rerun"
                     )
+                    """
             if not os.path.exists(output_folder1):
                 os.makedirs(output_folder1)
 
@@ -1085,16 +1089,16 @@ class BasicSynchronousClient(object):
                         with open(filename + ".json", "w") as f:
                             json.dump(final_metadata, f)
 
-                        filename = os.path.join(
-                            output_folder2,
-                            str(frameid)
-                            + "_"
-                            + str(timestamp),  # Framewise - image, final meta data
-                        )
-                        self.image2.save_to_disk(filename)
+                        # filename = os.path.join(
+                        #     output_folder2,
+                        #     str(frameid)
+                        #     + "_"
+                        #     + str(timestamp),  # Framewise - image, final meta data
+                        # )
+                        # self.image2.save_to_disk(filename)
 
-                        with open(filename + ".json", "w") as f:
-                            json.dump(final_metadata2, f)
+                        # with open(filename + ".json", "w") as f:
+                        #     json.dump(final_metadata2, f)
 
                     # cv2.imshow("image", self.cv_image)
                     # cv2.waitKey(0)
@@ -1153,6 +1157,9 @@ def label_traffic_lights_debug(world):
 
 
 def multiple_rounds_main(conf):
+
+    if os.path.exists(conf["trajectory_gt"]):
+        os.remove(conf["trajectory_gt"])
 
     with open(conf["intersection_config"]) as f:
         intersection_1 = json.load(f)

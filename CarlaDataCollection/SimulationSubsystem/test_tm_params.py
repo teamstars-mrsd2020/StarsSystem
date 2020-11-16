@@ -28,6 +28,7 @@ class test_tm_params:
         self.observed_percentage_jumping_light = 0
 
         # variables related to lead vehicle distance
+        self.min_lvd_pair = ()
         self.proximity_vehicle_threshold = 10.0
         self.vehicles_near_junction = []
         self.least_lvd = 1000
@@ -60,13 +61,13 @@ class test_tm_params:
                         self.vehicles_in_transition_set.add(v.id)
                         print("Inside junction")
                         print(v.type_id, ": broke traffic light")
-                        spectator = self.world.get_spectator()
-                        world_snapshot = self.world.get_snapshot()
-                        actor_snapshot = world_snapshot.find(v.id)
-                        spectator_transform = vehicle_wp.previous(15)[0].transform
-                        # spectator_transform = carla.Transform(spectator_transform.location + carla.Location(z = 10), carla.Rotation(pitch=-45))
-                        spectator_transform.location += carla.Location(x=0, y=0, z=3.0)
-                        spectator.set_transform(spectator_transform)
+                        # spectator = self.world.get_spectator()
+                        # world_snapshot = self.world.get_snapshot()
+                        # actor_snapshot = world_snapshot.find(v.id)
+                        # spectator_transform = vehicle_wp.previous(15)[0].transform
+                        # # spectator_transform = carla.Transform(spectator_transform.location + carla.Location(z = 10), carla.Rotation(pitch=-45))
+                        # spectator_transform.location += carla.Location(x=0, y=0, z=3.0)
+                        # spectator.set_transform(spectator_transform)
                     else:
                         if v.id in self.stopped_vehicles_set:
                             continue
@@ -178,6 +179,8 @@ class test_tm_params:
                 if dist < self.least_lvd:
                     self.least_lvd = dist
 
+                    # target vehicle is leader, ego vehicle is follower
+                    self.min_lvd_pair = (target_vehicle.id, ego_vehicle.id)
                     # uncomment to see where the minimum distance is recorded
                     # spectator = self.world.get_spectator()
                     # world_snapshot = self.world.get_snapshot()
@@ -212,12 +215,15 @@ class test_tm_params:
             self._is_vehicle_hazard(vehicle, filtered_vehicle_list)
 
     def update_observed_params(self):
+        self.min_lvd_pair = ()
         self.traffic_light_list = self.world.get_actors().filter(
             "traffic.traffic_light"
         )
         self.vehicle_list = self.world.get_actors().filter("*vehicle*")
         self.update_percentage_running_light()
         self.update_lvd()
+
+        return self.vehicles_in_transition_set, self.min_lvd_pair
 
 
 if __name__ == "__main__":
