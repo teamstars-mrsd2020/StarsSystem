@@ -24,10 +24,15 @@
             "configfile": "../StarsDataProcessing/detection_tracking/model_configs/configs/stars_faster_rcnn_R_50_FPN_3x.yaml",
             "modelpath": "../StarsDataProcessing/detection_tracking/model_final.pth",
             "classlist": "stars"
+        },
+        "track_3d": {
+            "configfile": "",
+            "modelpath": "/home/StarsSystem/StarsDataProcessing/CenterTrack/models/nuScenes_3Dtracking.pth",
+            "classlist": "track_3d"
         }
     },
     "classlists": {
-        "frcnn1": [
+        "coco": [
             "person",
             "bicycle",
             "car",
@@ -113,6 +118,18 @@
             "vehicle",
             "bike",
             "pedestrian"
+        ],
+        "track_3d":[
+            "car", 
+            "truck", 
+            "bus", 
+            "trailer",
+            "construction_vehicle", 
+            "pedestrian", 
+            "motorcycle", 
+            "bicycle",
+            "traffic_cone",
+            "barrier"
         ]
     }
 }

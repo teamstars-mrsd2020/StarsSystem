@@ -18,12 +18,12 @@ from utils.tracker_utils import *
 from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
 from IPython import embed
-from detector import Detector
+
 from bev_tracker.tracking import BevTracker
 
 # from mapping import visualize_stars_lane_map
 from time import sleep
-
+# import ipdb; ipdb.set_trace()
 # def get_past_vehicle_trajectories(df,frame_id):
 #     vehicles_in_frame = list(df[df.frame_id==frame_id]['agent_id'].unique())
 #     hist_traj = {}
@@ -145,7 +145,7 @@ class DataProcessing:
                 tf_scene = config_data["carla" + "_" + tf_id]
             else:
                 scene = json.load(open(ip_files["intersection_config"]))
-                tf_scene = config_data[scene["desc"]]
+                tf_scene = config_data[scene["location"]]
 
             camera_correspondences = np.asarray(tf_scene["xy_pixels_camera"])
             bev_correspondences = np.asarray(tf_scene["xy_pixels_map"])
@@ -163,9 +163,17 @@ class DataProcessing:
                 self.params["max_dist_thresh"]
             )
 
+            if self.params["use_3D_tracking"]:
+                from CenterTrack.src.center_track import Detector
+                self.model_name = "track_3d"
+            else:
+                from detector import Detector
+                self.model_name = tf_scene["det_model"]
+
+            self.relevant_classes = tf_scene["relevant_classes"]
             # ----- Load detector ------------------
             self.detector = Detector(
-                self.params["det_model"],
+                self.model_name,
                 ip_files["det_config_file"],
                 self.params["det_conf_thresh"],
             )
@@ -423,10 +431,11 @@ class DataProcessing:
             if ret is True:
 
                 # ---- If raw detection data not available run detector and tracker ---
+
                 if not self.params["use_stored_detections"]:
                     # Run detector model
                     raw_detection_boxes, tracked_boxes, _ = self.detector.run_detector(
-                        camera_view, self.params["relevant_classes"]
+                        camera_view, self.relevant_classes
                     )
                 else:  # raw detections are available
                     raw_detection_boxes = self.recorded_boxes[self.pbar.n]["raw_boxes"]
@@ -670,6 +679,7 @@ def detection_tracking(run_file, debug=False):
     data_processing = DataProcessing(carla)
     data_processing.load_data(str(tl_id), ip_files)
     data_processing.run_processing(op_files)
+    data_processing.pbar.close()
 
     # return data_processing.trajectories # npy array
 
