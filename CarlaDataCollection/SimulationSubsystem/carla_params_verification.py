@@ -452,7 +452,7 @@ class CarlaParamsVerifiction:
                     if frame_num % 3:
                         image_num += 1
                         filename = (
-                            "/home/stars/StarsSystem/CarlaDataCollection/SimulationSubsystem/Test4/%03d.png"
+                            "/home/stars/StarsSystem/data/extras/Test4/%03d.png"
                             % image_num
                         )
                         pygame.image.save(display, filename)
