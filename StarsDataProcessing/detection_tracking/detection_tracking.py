@@ -121,7 +121,7 @@ class DataProcessing:
         self.carla = carla
         self.hd_map = None
 
-    def load_data(self, tf_id, ip_files, eval):
+    def load_data(self, tf_id, ip_files, tracker, eval):
         """
         Load data from input files.
 
@@ -130,6 +130,7 @@ class DataProcessing:
             ip_files {dictionary} -- dictionary of input file paths
         """
         self.eval = eval
+        self.tracker = tracker
         # ----- Load video ------------------
         self.video_reader = cv2.VideoCapture(ip_files["tcam_file"])
         if self.video_reader.isOpened() is False:
@@ -168,7 +169,18 @@ class DataProcessing:
             if self.scene["eval"]:
                 self.camera_tf_matrix = np.asarray(tf_scene["camera_tf"])
             self.model_name = tf_scene["det_model"]
-            self.relevant_classes = tf_scene["relevant_classes"]
+
+            if self.tracker == "3D":
+                from CenterTrack.src.center_track import Detector
+
+                self.relevant_classes = [0]
+                self.model_name = "track_3d"
+            else:
+                from detector import Detector
+
+                self.model_name = tf_scene["det_model"]
+                self.relevant_classes = tf_scene["relevant_classes"]
+
             # ----- Load detector ------------------
             self.detector = Detector(
                 self.model_name,
@@ -179,6 +191,7 @@ class DataProcessing:
             # _-Load Tracker----
             self.tracking_params = json.load(open(ip_files["tracking_config_file"]))
             self.tracking_params["map_file"] = ip_files["map_file"]
+            self.tracking_params["fps"] = self.fps
             self.bev_tracker = BevTracker(
                 self.tracking_params, self.bev_boundary_polygon
             )
@@ -432,19 +445,22 @@ class DataProcessing:
             points_to_transform = []
 
             if ret is True:
-                frame_id += 1
-                # if frame_id < 7100:
+
+                # if self.pbar.n < 220:
+                #     self.pbar.update(1)
                 #     continue
 
                 camera_view = cv2.resize(camera_view, (1920, 1080))
 
-                self.bev_tracker.frame_id = self.pbar.n
+                self.bev_tracker._frame_id = self.pbar.n
                 # ---- If raw detection data not available run detector and tracker ---
                 if not self.params["use_stored_detections"]:
                     # Run detector model
-                    raw_detection_boxes, tracked_boxes, _ = self.detector.run_detector(
-                        camera_view, self.relevant_classes
-                    )
+                    (
+                        raw_detection_boxes,
+                        tracked_boxes,
+                        _,
+                    ) = self.detector.run_detector(camera_view, self.relevant_classes)
                 else:  # raw detections are available
                     raw_detection_boxes = self.recorded_boxes[self.pbar.n]["raw_boxes"]
                     tracked_boxes = self.recorded_boxes[self.pbar.n]["tracked_boxes"]
@@ -693,66 +709,16 @@ def detection_tracking(run_file, debug=False):
     # ip_files["fps"] = run_file["fps"]
     # ip_files["detection_model_name"] = run_file["detection_model_name"]
     fps = run_file["fps"]
+
+    tracker = run_file["tracker"]
     data_processing = DataProcessing(carla, fps)
-    data_processing.load_data(str(tl_id), ip_files, run_file["eval"])
+    data_processing.load_data(str(tl_id), ip_files, tracker, run_file["eval"])
     mota, motp = data_processing.run_processing(op_files)
     data_processing.pbar.close()
 
     return mota, motp
 
     # return data_processing.trajectories # npy array
-
-
-# def detection_tracking2(run_file, debug = False):
-
-#     # ------- Input Files ---------
-#     if debug:
-#         folder = "./../"
-#     else:
-#         folder = ""
-
-#     path_ = folder+ run_file["intersection_config_2"]
-#     with open(path_, ) as f:
-#         config = json.load(f)
-#     tl_id = config["traffic_light_id"]
-
-#     carla = run_file["HD_map"][-5] == "c"
-
-#     if carla:
-#         prefix = "c_"
-#     else:
-#         prefix = "r_"
-
-#     filename = prefix + run_file["video"][-15:-4]
-
-#     ip_files = {}
-#     ip_files["tcam_file"] = folder + run_file["video_2"]
-#     ip_files["bev_img_file"] = folder + run_file["HD_map"] + "/bev_frame.png"
-#     ip_files["map_file"] = folder + run_file["HD_map"] + "/annotations.starsjson"
-
-#     if debug:
-#         ip_files["config_file"] = "./config.json"
-#         ip_files["det_config_file"] = "./det_config.json"
-#     else:
-#         ip_files["config_file"] =  "../StarsDataProcessing/detection_tracking/config.json"
-#         ip_files["det_config_file"] = "../StarsDataProcessing/detection_tracking/det_config_test.json"
-
-#     if carla:
-#         ip_files["gt_file"] = folder + run_file["trajectory_gt"]
-
-#     ip_files["intersection_config"] = folder + run_file["intersection_config_2"]
-#     ip_files["detections_file"] = folder + "../data/extras/detection_boxes/" + filename + ".json"
-#     ip_files["traj_file"] = folder + run_file["trajectory_pred"]
-
-#     op_files = {}
-#     op_files["demo_video_file"] = folder + "../data/extras/annotated_videos/" + filename + ".mp4"
-#     op_files["traj_file"] = folder + run_file["trajectory_pred"]
-#     op_files["detections_file"] = folder + "../data/extras/detection_boxes/" + filename + ".json"
-
-#     data_processing = DataProcessing(carla)
-#     data_processing.load_data(str(tl_id), ip_files)
-#     data_processing.run_processing(op_files)
-#     return data_processing.trajectories # npy array
 
 
 if __name__ == "__main__":

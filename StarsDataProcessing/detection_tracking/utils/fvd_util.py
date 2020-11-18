@@ -198,10 +198,15 @@ def visualize(img, stars_hd_map):
     return img
 
 
-def plot_2d_boxes(bev_img, states, w=20, h=10):
-    for id_ in states:
-        state = states[id_][0]
-        x, y, vx, vy, ax, ay = state
+def plot_2d_boxes(bev_img, pred_traj, w=20, h=10):
+    for id_ in pred_traj:
+        state = pred_traj[id_][-1]
+        (
+            x,
+            y,
+            vx,
+            vy,
+        ) = state
         theta = np.arctan2(vy, vx)
 
         rect = np.array(
