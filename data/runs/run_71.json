@@ -16,6 +16,6 @@
     "params_pred": "../data/params/rpred_002_020_003.json",
     "fps" : 60,
     "eval" : 0,
-    "tracker" : "3D",
+    "tracker" : "2D",
     "Description": "Real world intersection, second day, segment 3"
 }

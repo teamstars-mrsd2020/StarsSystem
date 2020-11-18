@@ -1,4 +1,6 @@
 from StarsTest.test_data_collection import get_config
+from test_stars_data_proc import *
+import sys
 
 
 def test_1(run):
@@ -32,7 +34,16 @@ def test_2(run):
     )
 
     cfg = get_config(run)
-    detection_tracking(cfg)
+    mota, motp = detection_tracking(cfg)
+
+    intersection_cfg_path = cfg["intersection_config"]
+    intersection_cfg = get_config_file(intersection_cfg_path)
+    intersection_type = intersection_cfg["type"]
+
+    if intersection_type == "carla":
+        assert mota >= 0.4
+        assert motp >= 0.4
+    assert True
 
 
 # Test for Data Processing Verification (TLV, LVD)
@@ -134,18 +145,23 @@ def test_4(run):
     config_data.update(behavior_cfg)
 
     from CarlaDataCollection.SimulationSubsystem.carla_params_verification import (
-        carla_params_verification,
+        CarlaParamsVerifiction,
     )
 
-    # Pass config to data collection functions
-    obs_paramTLJ, obs_paramLVD = carla_params_verification(config_data)
+    # Pass config to data collection functions, save the image frames
+    save_frames = False
+    observe_gt = True
+    carla_params_verification = CarlaParamsVerifiction(
+        config_data, observe_gt, save_frames
+    )
+    obs_paramTLJ, obs_paramLVD = carla_params_verification.run()
 
     gt_paramLVD = behavior_cfg["global_distance_to_leading_vehicle"]
     gt_paramTLJ = behavior_cfg["ignore_lights_percentage"]
 
     LVD_change = get_change(gt_paramLVD, obs_paramLVD)
     TLJ_change = get_change(gt_paramTLJ, obs_paramTLJ)
-    LVD_tol = 20
+    LVD_tol = 100
     TLJ_tol = 20
 
     print("LVD change : ", LVD_change, "%")
@@ -158,8 +174,55 @@ def test_5():
     assert 0
 
 
-def test_6():
-    pass
+# Test for Simulation FPS
+def test_6(run):
+    import pytest
+    import json
+    import os
+    import pandas as pd
+    import sys
+    from test_simulation import (
+        get_config,
+        check_file_and_size,
+        get_config_file,
+        get_change,
+    )
+
+    sys.path.append("../")
+
+    # Run Carla in the background
+
+    # Read behavior config
+    cfg = get_config(run)
+
+    behavior_cfg_path = cfg["behavior_config"]
+    behavior_cfg = get_config_file(behavior_cfg_path)
+
+    carla_cfg_path = cfg["carla_config"]
+    carla_cfg = get_config_file(carla_cfg_path)
+    print(carla_cfg)
+
+    config_data = {}
+    config_data.update(carla_cfg)
+    config_data.update(behavior_cfg)
+
+    from CarlaDataCollection.SimulationSubsystem.carla_params_verification import (
+        CarlaParamsVerifiction,
+    )
+
+    # Pass config to data collection functions, save the image frames
+    save_frames = False
+    observe_gt = False
+    carla_params_verification = CarlaParamsVerifiction(
+        config_data, observe_gt, save_frames
+    )
+    observed_fps = carla_params_verification.run()
+
+    required_fps = 10
+
+    print("FPS : ", observed_fps)
+
+    assert observed_fps > required_fps
 
 
 def test_7():
@@ -167,30 +230,72 @@ def test_7():
 
 
 def test_fvd_demo1(run):
-    test_1(run)
-    test_2(run)
-    assert 0
+    # Carla
+    test_obj = TestSTARSDataProc()
+    cfg = get_config(run)
+
+    if cfg["eval"]:
+        # Get p,r for one side
+        # test_1(run)
+        # Get trajectory for one side
+        # Get mota,motp for side 0 using GT
+        test_2(run)
+        # Get trajectory for other side
+        from StarsDataProcessing.detection_tracking.detection_tracking import (
+            detection_tracking,
+        )
+
+        sys.path.append("../StarsDataProcessing/detection_tracking")
+        cfg["intersection_config"] = cfg["intersection_config_2"]
+        cfg["video"] = cfg["video_2"]
+        cfg["trajectory_pred"] = cfg["trajectory_pred_2"]
+        detection_tracking(cfg)
+        assert check_file_and_size(cfg["trajectory_pred"])
+
+        # combine both
+        cfg2 = get_config(run)
+
+        traj_combined = combine(cfg2["trajectory_pred"], cfg2["trajectory_pred_2"])
+        traj_combined.to_csv(cfg2["trajectory_pred_combined"], index=False)
+        assert check_file_and_size(cfg2["trajectory_pred_combined"])
+
+    else:
+        # get trajectories
+        test_obj.test_get_trajectory(run)
+
+    # Get TL status for both
+    test_obj.test_get_TL_status(run)
+
+    # compute TLV, LVD using both sides
+    test_obj.test_get_TLV(run)
+    test_obj.test_get_LVD(run)
+
+    if cfg["eval"]:
+        # Compare params with GT
+        test_obj.test_validate_params_wrt_gt(run)
+
+    assert True
 
 
 def test_fvd_demo2(run):
-    import json
-    from test_stars_data_proc import get_config, check_file_and_size, get_config_file
-    import sys
 
-    sys.path.append("../")
-    # Running Detection Tracking on video
-    from StarsDataProcessing.detection_tracking.detection_tracking import (
-        detection_tracking,
-    )
+    test_obj = TestSTARSDataProc()
+    test_obj.test_get_trajectory(run)
+    test_obj.test_get_TL_status(run)
+    test_obj.test_get_TLV(run)
+    test_obj.test_get_LVD(run)
 
-    cfg = get_config(run)
-    detection_tracking(cfg)
-
-    assert 0
+    assert True
 
 
-def test_fvd_demo3():
-    assert 0
+def test_fvd_demo3_1(run):
+    test_4(run)
+    assert True
+
+
+def test_fvd_demo3_2(run):
+    test_6(run)
+    assert True
 
 
 def test_fvd_demo4():

@@ -60,9 +60,9 @@ def get_trajectory_length(agent_df: pd.DataFrame):
 
     return np.sum(np.sqrt(dist_array))
 
-def get_global_stats_with_visualization(df: pd.DataFrame, bev_image):
+def get_global_stats_with_visualization(df: pd.DataFrame, bev_image, scaling_factor, fps, lvd_debug_file="LVD_Video"):
     fourcc = cv2.VideoWriter_fourcc(*'MP4V')
-    out = cv2.VideoWriter("LVD_Video.mp4", fourcc, 20.0, (bev_image.shape[1], bev_image.shape[0]))
+    out = cv2.VideoWriter(f"{lvd_debug_file}.mp4", fourcc, fps, (bev_image.shape[1], bev_image.shape[0]))
     
     TEXT_FACE = cv2.FONT_HERSHEY_DUPLEX
     TEXT_SCALE = 1
@@ -98,7 +98,7 @@ def get_global_stats_with_visualization(df: pd.DataFrame, bev_image):
             # print(min_dist)
             cv2.putText(
                 birdview,
-                "LVD: {0:.2f}".format(min_dist/9.5) +"m",
+                "LVD: {0:.2f}".format(min_dist/scaling_factor) +"m",
                 (900, 30),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 0.75,
@@ -157,7 +157,7 @@ def get_global_stats_with_visualization(df: pd.DataFrame, bev_image):
             "other_y",
         ],
     )
-    lvd_df.to_csv("lvd_debug_df.csv")
+    lvd_df.to_csv(f"{lvd_debug_file}.csv")
     # the following lines avoid vehicle A->B and B->A matching errors in the same frame and drops them since the distance values are duplicates and we only need one
     lvd_df["min_agent_id"] = lvd_df[["agent_id", "lead_vehicle_id"]].min(axis=1)
     lvd_df["max_agent_id"] = lvd_df[["agent_id", "lead_vehicle_id"]].max(axis=1)

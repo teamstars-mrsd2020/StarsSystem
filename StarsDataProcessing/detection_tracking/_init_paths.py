@@ -1,8 +1,6 @@
 import os.path as osp
 import sys
 
-import IPython
-
 
 def add_path(path):
     if path not in sys.path:

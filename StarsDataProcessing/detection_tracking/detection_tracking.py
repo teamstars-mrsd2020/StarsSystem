@@ -192,6 +192,9 @@ class DataProcessing:
             self.tracking_params = json.load(open(ip_files["tracking_config_file"]))
             self.tracking_params["map_file"] = ip_files["map_file"]
             self.tracking_params["fps"] = self.fps
+            if self.carla:
+                self.tracking_params["stop_infeasible_associations"] = False
+
             self.bev_tracker = BevTracker(
                 self.tracking_params, self.bev_boundary_polygon
             )
@@ -289,61 +292,7 @@ class DataProcessing:
 
         return new_df
 
-    def generate_gt_tracks(self, h, w):
-        """
-        Extract ground-truth tracks from gt carla locations.
-
-        Transform the gt locations of carla to bev camera frame.
-        Ignore those tracks whose bounding boxes lie on the corner of
-        the image frame governed by camera_view_offset
-        Arguments:
-            h {scalar} -- camera_view height
-            w {scalar} -- camera_view width
-
-        Returns:
-            list of lists -- [[xbev1, ybev1, id, cls], [xbev2, ybev2, id, cls] ..]
-        """
-        gt_tracks = []
-        # import ipdb
-
-        # ipdb.set_trace()
-        for gt_detections in self.gt_data[self.pbar.n]["metadata"]:
-
-            world_point = gt_detections["location"]
-            x_world, y_world, z_world = (
-                world_point["x"],
-                world_point["y"],
-                world_point["z"],
-            )
-            bbox_2d = gt_detections["bounding_box2d"]
-            x_bbox = (bbox_2d[0] + bbox_2d[2]) / 2
-            y_bbox = ((bbox_2d[1] + bbox_2d[3]) / 2 + bbox_2d[3]) / 2
-            id, cls = gt_detections["agentid"], gt_detections["classname"]
-            point = np.array([x_world, y_world, z_world, 1]).reshape(4, 1)
-            x_bev, y_bev = get_bev_coords(
-                point, self.bev_tf_matrix, self.intrinsics, self.tf_matrix
-            )
-
-            # x_bev_homo, y_bev_homo = fvd_util.transform(H_static_map, x_bbox, y_bbox)
-            # if ((x_bev < bev_pos_bound[0]) or
-            #         (x_bev >= bev_pos_bound[1]) or
-            #         (y_bev < bev_pos_bound[2]) or
-            #         (y_bev >= bev_pos_bound[3])):
-            #     continue
-            if not self.bev_boundary_polygon.contains(Point(x_bev, y_bev)):
-                continue
-
-            if (
-                x_bbox >= self.params["camera_view_offset"]
-                and x_bbox <= (w - self.params["camera_view_offset"])
-                and y_bbox >= self.params["camera_view_offset"]
-                and y_bbox <= (h - self.params["camera_view_offset"])
-            ):
-                gt_tracks.append([x_bev, y_bev, id, cls])
-
-        return gt_tracks
-
-    def render_trajectories(self, birdview, frame_id, pred_traj):
+    def render_trajectories(self, birdview, frame_id):
         """
         Plot ground truth and extracted trajectories on the birdview image.
 
@@ -367,7 +316,7 @@ class DataProcessing:
             for vehicle_id in vehicles_in_frame:
                 hist_traj[vehicle_id] = df.query(
                     f"frame_id<={frame_id} & agent_id=={vehicle_id}"
-                )[["x", "y"]].to_numpy()
+                )[["x", "y", "vx", "vy"]].to_numpy()
             return hist_traj
 
         # plot gt trajectories for only visible agents
@@ -376,7 +325,7 @@ class DataProcessing:
             for id in gt_traj:
                 cv2.polylines(
                     birdview,
-                    [np.array(gt_traj[id], dtype=np.int32)],
+                    [np.array(gt_traj[id][:, :2], dtype=np.int32)],
                     False,
                     [0, 0, 0],
                     thickness=5,
@@ -384,19 +333,21 @@ class DataProcessing:
         if self.params["use_traj_file"]:
             pred_traj = get_agent_tracks(self.filtered_traj)
 
+        pred_traj = get_agent_tracks(self.bev_tracker.tracked_agents_df)
+
         # plot predicted trajectories for only visible agents
         for id in pred_traj:
             color = colors[int(id) % len(colors)]
             color = [i * 255 for i in color]
             cv2.polylines(
                 birdview,
-                [np.array(pred_traj[id], dtype=np.int32)],
+                [np.array(pred_traj[id][:, :2], dtype=np.int32)],
                 False,
                 color,
                 thickness=5,
             )
 
-        # birdview = fvd_util.plot_2d_boxes(birdview, pred_traj, w=20, h=10)
+        birdview = fvd_util.plot_2d_boxes(birdview, pred_traj, w=20, h=10)
         # plot bev boundary
         cv2.polylines(
             birdview,
@@ -437,7 +388,6 @@ class DataProcessing:
         # --------- progress bar -------------------------
         self.pbar = tqdm(total=self.video_reader.get(cv2.CAP_PROP_FRAME_COUNT))
 
-        frame_id = 0
         while self.video_reader.isOpened():
 
             ret, camera_view = self.video_reader.read()
@@ -446,7 +396,7 @@ class DataProcessing:
 
             if ret is True:
 
-                # if self.pbar.n < 220:
+                # if self.pbar.n < 1300:
                 #     self.pbar.update(1)
                 #     continue
 
@@ -459,31 +409,46 @@ class DataProcessing:
                     (
                         raw_detection_boxes,
                         tracked_boxes,
-                        _,
+                        bboxes_3d,
                     ) = self.detector.run_detector(camera_view, self.relevant_classes)
                 else:  # raw detections are available
                     raw_detection_boxes = self.recorded_boxes[self.pbar.n]["raw_boxes"]
                     tracked_boxes = self.recorded_boxes[self.pbar.n]["tracked_boxes"]
 
-                # plot tracked bounding boxes on image_view
-                self.camera_view = dp_utils.plot_bboxes(
-                    camera_view, tracked_boxes, self.detector.get_classlist()
-                )
+                if self.tracker == "3D":
+                    # plot 2d tracked bounding boxes on image_view
+                    self.camera_view = dp_utils.plot_bboxes(
+                        camera_view, tracked_boxes, self.detector.get_classlist()
+                    )
+                else:
+                    # plot tracked bounding boxes on image_view
+                    self.camera_view = dp_utils.plot_bboxes(
+                        camera_view, tracked_boxes, self.detector.get_classlist()
+                    )
 
                 if self.params["use_traj_file"]:
 
                     bev_view = self.render_trajectories(
-                        self.bev_image.copy(), self.pbar.n, tracked_agents_history
+                        self.bev_image.copy(), self.pbar.n
                     )
 
                 else:
-                    # transform points to bird's-eye view
-                    points_to_transform = dp_utils.extract_bottom_center(
-                        tracked_boxes,
-                        self.params["camera_view_offset"],
-                        self.camera_view.shape[0],
-                        self.camera_view.shape[1],
-                    )
+                    if self.tracker == "3D":
+
+                        points_to_transform = dp_utils.extract_bottom_plane_center(
+                            bboxes_3d,
+                            self.params["camera_view_offset"],
+                            self.camera_view.shape[0],
+                            self.camera_view.shape[1],
+                        )
+                    else:
+                        # transform points to bird's-eye view
+                        points_to_transform = dp_utils.extract_bottom_center(
+                            tracked_boxes,
+                            self.params["camera_view_offset"],
+                            self.camera_view.shape[0],
+                            self.camera_view.shape[1],
+                        )
 
                     tracks = dp_utils.transform_points(
                         self.tf_matrix, points_to_transform, self.bev_boundary_polygon
@@ -497,8 +462,6 @@ class DataProcessing:
                         tracks, tracked_agents_history = self.bev_tracker.tracker(
                             pre_filtered_tracks
                         )
-                        # df = self.bev_tracker.tracked_agents_df
-                        # df = self.trajectories_df
 
                     else:
                         tracks = pre_filtered_tracks
@@ -540,19 +503,21 @@ class DataProcessing:
                 # save trajectories
                 if not self.params["use_traj_file"]:
                     self.trajectories.append(tracks)
-                    # plot trajectories
-                    bev_view = self.render_trajectories(
-                        self.bev_image.copy(), self.pbar.n, tracked_agents_history
-                    )
 
-                    # bev_view = dp_utils.renderhomography(
-                    #     tracks,
-                    #     gt_tracks,
-                    #     tracked_agents_history,
-                    #     self.bev_image.copy(),
-                    #     self.bev_boundary,
-                    #     self.params["evaluate_tracker"],
-                    # )
+                    if self.params["filter_traj"]:
+                        # plot trajectories
+                        bev_view = self.render_trajectories(
+                            self.bev_image.copy(), self.pbar.n
+                        )
+                    else:
+                        bev_view = dp_utils.renderhomography(
+                            tracks,
+                            gt_tracks,
+                            tracked_agents_history,
+                            self.bev_image.copy(),
+                            self.bev_boundary,
+                            self.scene["eval"],
+                        )
 
                 # final frame
                 joined_view = dp_utils.join_views(
@@ -631,8 +596,9 @@ class DataProcessing:
         # saving is being done outside now
         if self.params["save_traj_file"] and not self.params["use_traj_file"]:
             print("Saving trajectory file..")
-            df = convertTrajectoryToDataFrame(self.trajectories, self.map_path)
-            df.to_csv(op_files["traj_file"], index=False)
+            # df = convertTrajectoryToDataFrame(self.trajectories, self.map_path)
+            self.bev_tracker.trajectories_df.to_csv(op_files["traj_file"], index=False)
+            # df.to_csv(op_files["traj_file"], index=False)
 
         # When everything is done, release the video capture object
         self.video_reader.release()
@@ -709,7 +675,6 @@ def detection_tracking(run_file, debug=False):
     # ip_files["fps"] = run_file["fps"]
     # ip_files["detection_model_name"] = run_file["detection_model_name"]
     fps = run_file["fps"]
-
     tracker = run_file["tracker"]
     data_processing = DataProcessing(carla, fps)
     data_processing.load_data(str(tl_id), ip_files, tracker, run_file["eval"])

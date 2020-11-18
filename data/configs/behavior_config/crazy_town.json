@@ -6,9 +6,10 @@
     "global_distance_to_leading_vehicle" : 5,
     "percentageTrafficBreakingLight": 100,
     "ignore_lights_percentage" : 80.0,
-    "percentagePedestriansCrossing" : 50,
-    "percentagePedestriansRunning" : 50,
+    "percentagePedestriansCrossing" : 0,
+    "percentagePedestriansRunning" : 0,
     "percentageTrafficBreakingSpeedLimit": 0,
-    "vehicle_percentage_speed_difference": -100,
-    "global_percentage_speed_difference" : 0
+    "vehicle_percentage_speed_difference": 0,
+    "global_percentage_speed_difference" : 0,
+    "simulation_time" : 30
 }

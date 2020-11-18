@@ -3,12 +3,13 @@
     "hybrid" : false,
     "number_of_vehicles": 30,
     "number_of_walkers": 10,
-    "global_distance_to_leading_vehicle" : 5,
-    "percentageTrafficBreakingLight": 0,
     "ignore_lights_percentage" : 0,
     "percentageTrafficBreakingSpeedLimit": 0,
     "vehicle_percentage_speed_difference": 0,
     "global_percentage_speed_difference" : 0,
     "percentagePedestriansCrossing" : 0,
-    "percentagePedestriansRunning" : 0
+    "percentagePedestriansRunning" : 0,
+    
+    "global_distance_to_leading_vehicle" : 5,
+    "percentageTrafficBreakingLight": 0
 }

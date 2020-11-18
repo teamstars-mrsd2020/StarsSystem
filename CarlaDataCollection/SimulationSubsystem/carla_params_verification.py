@@ -123,11 +123,12 @@ def highlight_danger_actors(world, actor_ids):
 
 
 class CarlaParamsVerifiction:
-    def __init__(self, config, save_frames):
+    def __init__(self, config, observe_gt, save_frames):
 
         self.config = config
         self.save_frames = save_frames
         self.world = None
+        self.observe_gt = observe_gt
 
     def highlight_traffic_lights(self):
 
@@ -409,12 +410,12 @@ class CarlaParamsVerifiction:
             pygame.font.init()
 
             display = pygame.display.set_mode(
-                (1080, 720), pygame.HWSURFACE | pygame.DOUBLEBUF
+                (1820, 980), pygame.HWSURFACE | pygame.DOUBLEBUF
             )
 
             time.sleep(1)
 
-            hud = HUD(1080, 720)
+            hud = HUD(1820, 980)
             camera_manager = CameraManager(hud, 2.2, self.world)
             camera_manager.transform_index = 0
             camera_manager.set_sensor(0, notify=False)
@@ -441,17 +442,19 @@ class CarlaParamsVerifiction:
                 frame_num += 1
                 clock.tick_busy_loop(60)
                 hud.tick(self.world, clock)
-                tfl_violators, lvd_pair = test_tm.update_observed_params()
-                # test_tm.update_observed_params()
-                self.highlight_display(tfl_violators, lvd_pair)
-                lvd = test_tm.least_lvd
-                tlv = test_tm.observed_percentage_jumping_light
-                # tlv = 0
-                # lvd = 0
-                print("Current percentage for jumping red light: ", tlv)
-                print("Current minimum distance between leading vehicle: ", lvd)
+                if self.observe_gt:
+                    tfl_violators, lvd_pair = test_tm.update_observed_params()
+                    self.highlight_display(tfl_violators, lvd_pair)
+                    lvd = test_tm.least_lvd
+                    tlv = test_tm.observed_percentage_jumping_light
+                    # print("Current percentage for jumping red light: ", tlv)
+                    # print("Current minimum distance between leading vehicle: ", lvd)
+                else:
+                    lvd = self.config["global_distance_to_leading_vehicle"]
+                    tlv = self.config["ignore_lights_percentage"]
+
                 camera_manager.render(display)
-                hud.render(display, tlv, lvd)
+                hud.render(display, tlv, lvd, self.observe_gt)
                 pygame.display.flip()
 
                 if self.save_frames:
@@ -498,7 +501,10 @@ class CarlaParamsVerifiction:
 
             time.sleep(0.5)
 
-            return test_tm.observed_percentage_jumping_light, test_tm.least_lvd
+            if self.observe_gt:
+                return test_tm.observed_percentage_jumping_light, test_tm.least_lvd
+            else:
+                return hud.server_fps
 
 
 if __name__ == "__main__":

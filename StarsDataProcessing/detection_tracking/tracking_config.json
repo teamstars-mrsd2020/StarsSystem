@@ -9,7 +9,8 @@
 "theta_thresh":0.1,
 "map_file":"/home/stars/Code/detector/data/map/bev_fifth_craig.starsjson",
 "use_map_prior":true,
-"lane_change_counter_thresh":3,
+"lane_change_counter_thresh":15,
 "gating_threshold":70,
-"dt":1
+"dt":1,
+"stop_infeasible_associations":true
 }

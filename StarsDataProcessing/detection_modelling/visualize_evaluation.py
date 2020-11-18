@@ -45,6 +45,10 @@ def run(
     PLOT_PR_CURVE=True,
     show_visualization=True,
 ):
+    fourcc = cv2.VideoWriter_fourcc(*'MP4V')
+    out_video = cv2.VideoWriter("PR_test1.mp4", fourcc, 20.0, (1920, 1080))
+
+
     evaluator = evaluation.prepareEvaluator(
         confidence_thres=confidence_thres,
         iou_thres=iou_thres,
@@ -116,6 +120,7 @@ def run(
                 winy = 10
                 cv2.moveWindow("Stars Detector Evaluation", winx, winy)
                 cv2.imshow("Stars Detector Evaluation", out)
+                out_video.write(out)
 
                 cv2.waitKey(delay=10)
 
@@ -129,7 +134,9 @@ def run(
         pbar.update(1)
     if show_visualization:
         cv2.waitKey(10)
+        cv2.destroyAllWindows()
     pbar.close()
+    out_video.release()
     return p_vehicle, r_vehicle
 
 

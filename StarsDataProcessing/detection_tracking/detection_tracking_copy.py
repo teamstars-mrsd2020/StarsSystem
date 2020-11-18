@@ -291,7 +291,7 @@ class DataProcessing:
 
         return new_df
 
-    def render_trajectories(self, birdview, frame_id, pred_traj):
+    def render_trajectories(self, birdview, frame_id):
         """
         Plot ground truth and extracted trajectories on the birdview image.
 
@@ -324,7 +324,7 @@ class DataProcessing:
             for id in gt_traj:
                 cv2.polylines(
                     birdview,
-                    [np.array(gt_traj[id][0, :2], dtype=np.int32)],
+                    [np.array(gt_traj[id][:, :2], dtype=np.int32)],
                     False,
                     [0, 0, 0],
                     thickness=5,
@@ -400,9 +400,9 @@ class DataProcessing:
             if ret is True:
                 frame_id += 1
 
-                if self.pbar.n < 400:
-                    self.pbar.update(1)
-                    continue
+                # if self.pbar.n < 400:
+                #     self.pbar.update(1)
+                #     continue
 
                 camera_view = cv2.resize(camera_view, (1920, 1080))
 
@@ -464,7 +464,7 @@ class DataProcessing:
                 #####################
 
                 if self.params["use_3D_tracking"]:
-                    # plot 3d tracked bounding boxes on image_view
+                    # plot 2d tracked bounding boxes on image_view
                     self.camera_view = dp_utils.plot_bboxes(
                         camera_view, tracked_boxes, self.detector.get_classlist()
                     )
@@ -477,7 +477,7 @@ class DataProcessing:
                 if self.params["use_traj_file"]:
 
                     bev_view = self.render_trajectories(
-                        self.bev_image.copy(), self.pbar.n, tracked_agents_history
+                        self.bev_image.copy(), self.pbar.n
                     )
 
                 else:
@@ -510,8 +510,6 @@ class DataProcessing:
                         tracks, tracked_agents_history = self.bev_tracker.tracker(
                             pre_filtered_tracks
                         )
-                        # df = self.bev_tracker.tracked_agents_df
-                        # df = self.trajectories_df
 
                     else:
                         tracks = pre_filtered_tracks
@@ -557,7 +555,7 @@ class DataProcessing:
                     if self.params["filter_traj"]:
                         # plot trajectories
                         bev_view = self.render_trajectories(
-                            self.bev_image.copy(), self.pbar.n, tracked_agents_history
+                            self.bev_image.copy(), self.pbar.n
                         )
                     else:
                         bev_view = dp_utils.renderhomography(
@@ -646,8 +644,9 @@ class DataProcessing:
         # saving is being done outside now
         if self.params["save_traj_file"] and not self.params["use_traj_file"]:
             print("Saving trajectory file..")
-            df = convertTrajectoryToDataFrame(self.trajectories, self.map_path)
-            df.to_csv(op_files["traj_file"], index=False)
+            # df = convertTrajectoryToDataFrame(self.trajectories, self.map_path)
+            self.bev_tracker.trajectories_df.to_csv(op_files["traj_file"], index=False)
+            # df.to_csv(op_files["traj_file"], index=False)
 
         # When everything is done, release the video capture object
         self.video_reader.release()

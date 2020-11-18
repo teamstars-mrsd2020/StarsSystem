@@ -9,7 +9,7 @@
     "percentageTrafficBreakingSpeedLimit": 0,
     "vehicle_percentage_speed_difference": 0,
     "global_percentage_speed_difference" : 0,
-    "simulation_time" : 1200,
+    "simulation_time" : 30,
     
     "global_distance_to_leading_vehicle" : 7,
     "ignore_lights_percentage" : 30.0

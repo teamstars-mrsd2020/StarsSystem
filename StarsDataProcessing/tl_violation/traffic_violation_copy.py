@@ -1,3 +1,4 @@
+from StarsDataProcessing.detection_tracking import _init_paths
 import pandas as pd
 from collections import defaultdict 
 # from point_loc import get_points, draw_circle
@@ -7,6 +8,8 @@ import copy
 import json
 from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
+# import ipdb; ipdb.set_trace()
+from utils.dp_utils import *
 
 class Agent:
     def __init__(self, agent_id):
@@ -66,6 +69,13 @@ class Agent:
             dist = [abs(i) for i in self.tl_relative_posn_now]
             self.lane_id = dist.index(min(dist))
 
+    def moving_in(self, HDMap):
+        lane_id = get_lane_id_from_point(self.position, HDMap)
+        out =  (get_lane_direction(lane_id, HDMap) == "INWARDS")
+
+        return out
+
+
 class TrafficLight:
     def __init__(self, tl_id):
         self.id = tl_id
@@ -99,7 +109,7 @@ def show_lines(self, birdview, start_point, end_point):
 
 def update_all_tl_states(tl_list, df):
     for tl in tl_list.keys():
-        # print(df[df["tl_id"] == tl].iloc[0])
+        # print(df["tl_id"] == tl)
         state = df[df["tl_id"] == tl].iloc[0]['tl_state']
         tl_list[tl].update_state(state)
 
@@ -116,7 +126,7 @@ def create_polygon(birdview, points):
     return cnts
 
 
-def tlv(cfg, debug = False):
+def tlv(cfg, fps, file_name, debug = False):
     
     TEXT_FACE = cv2.FONT_HERSHEY_DUPLEX
     TEXT_SCALE = 1
@@ -132,7 +142,7 @@ def tlv(cfg, debug = False):
 
     fourcc = cv2.VideoWriter_fourcc(*'MP4V')
     # out = cv2.VideoWriter("video2.mp4", fourcc, 20.0, (1920, 1080))
-    out = cv2.VideoWriter("TLV_Video.mp4", fourcc, 20.0, (birdview.shape[1], birdview.shape[0]))
+    out = cv2.VideoWriter(file_name+".mp4", fourcc, fps, (birdview.shape[1], birdview.shape[0]))
 
     HDMap = json.load(open(folder + cfg["HD_map"]+"/annotations.starsjson"))
 
@@ -208,18 +218,6 @@ def tlv(cfg, debug = False):
                 agent_list[agent_id].check_if_at_intersection(HDMap)
                 agent_list[agent_id].compute_relative_posn(tl_list)
                 agent_list[agent_id].starts_at_intersection = agent_list[agent_id].at_intersection
-
-                if agent_list[agent_id].starts_at_intersection:
-                    dist = [abs(i) for i in agent_list[agent_id].tl_relative_posn_now]
-                    nearest_light = dist.index(min(dist))
-                    if tl_list[nearest_light].state == "red":
-                        agent_list[agent_id].violate = True
-                        violation_count += 1
-                        print("Agent ",agent_id, " violates traffic light")
-                        violation_list.append(agent_id)
-
-
-
                 # agent_list[agent_id].set_lane(tl_list, HDMap)
                 # lane = agent_list[agent_id].lane_id
                 # if lane != -1:
@@ -277,10 +275,13 @@ def tlv(cfg, debug = False):
 
             if first_ >= 0:
                 if not agent_list[first_].is_denom: 
-                    # if not agent_list[first_].starts_at_intersection:
-                    denom += 1
-                    agent_list[first_].is_denom = True
-                    denom_list.append(first_)
+                    if not agent_list[first_].starts_at_intersection:
+                        # import ipdb;ipdb_set()
+                        if agent_list[first_].moving_in(HDMap):
+                            
+                            denom += 1
+                            agent_list[first_].is_denom = True
+                            denom_list.append(first_)
                     # print(first_)
 
         if denom == 0:
