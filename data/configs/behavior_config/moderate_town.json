@@ -5,10 +5,11 @@
     "number_of_walkers": 20,
     "global_distance_to_leading_vehicle" : 7,
     "percentageTrafficBreakingLight": 100,
-    "ignore_lights_percentage" : 20.0,
+    "ignore_lights_percentage" : 60.0,
     "percentagePedestriansCrossing" : 20,
     "percentagePedestriansRunning" : 20,
     "percentageTrafficBreakingSpeedLimit": 0,
     "vehicle_percentage_speed_difference": 0,
-    "global_percentage_speed_difference" : 0
+    "global_percentage_speed_difference" : 0,
+    "simulation_time" : 1200
 }

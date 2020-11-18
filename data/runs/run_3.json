@@ -18,5 +18,8 @@
     "params_gt": "../data/params/cgt_002_020_001.json",
     "detection_gt": "../data/metadata/frame_wise/c_002_000_001",
     "duration": 0.5,
+    "fps" : 20,
+    "eval" : 1,
+    "tracker" : "2D",
     "Description": "Second Intersection, 30 sec video"
 }

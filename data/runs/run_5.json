@@ -14,5 +14,8 @@
     "trajectory_pred_2": "../data/trajectories/r_002_002_001.csv",
     "trajectory_pred_combined": "../data/trajectories/r_002_020_001.csv",
     "params_pred": "../data/params/rpred_002_020_001.json",
+    "fps" : 60,
+    "eval" : 0,
+    "tracker" : "2D",
     "Description": "Real world intersection, second day"
 }
