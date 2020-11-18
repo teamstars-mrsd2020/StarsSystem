@@ -431,6 +431,12 @@ class CarlaParamsVerifiction:
             # )
             frame_num = 0
             image_num = 0
+            if self.save_frames:
+                output_folder = "/home/stars/StarsSystem/data/extras/Test4"
+                if not os.path.exists(output_folder):
+                    print("Creating folder: ", output_folder)
+                    os.makedirs(output_folder)
+
             while True:
                 frame_num += 1
                 clock.tick_busy_loop(60)
@@ -452,7 +458,7 @@ class CarlaParamsVerifiction:
                     if frame_num % 3:
                         image_num += 1
                         filename = (
-                            "/home/stars/StarsSystem/data/extras/Test4/%03d.png"
+                            "/home/stars/StarsSystem/data/extras/Test4/%04d.png"
                             % image_num
                         )
                         pygame.image.save(display, filename)

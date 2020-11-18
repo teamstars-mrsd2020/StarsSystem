@@ -28,7 +28,7 @@ def get_round_number(intersection_id, side_id):
 if __name__ == "__main__":
     """Records data from carla and stores GT"""
 
-    run_id = 3
+    run_id = 22
 
     with open("../data/runs/run_" + str(run_id) + ".json") as f:
         conf = json.load(f)

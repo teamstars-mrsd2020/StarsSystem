@@ -177,6 +177,7 @@ class verify_dp_params:
             if (
                 target_vehicle_waypoint.road_id != ego_vehicle_waypoint.road_id
                 or target_vehicle_waypoint.lane_id != ego_vehicle_waypoint.lane_id
+                or target_vehicle_waypoint.is_junction
             ):
                 continue
 
@@ -230,6 +231,10 @@ class verify_dp_params:
 
         for vehicle in self.vehicles_near_junction:
             # filter vehicles which are closer to this vehicle
+
+            if self.map.get_waypoint(vehicle.get_location()).is_junction:
+                continue
+
             filtered_vehicle_list = [
                 v
                 for v in self.vehicle_list

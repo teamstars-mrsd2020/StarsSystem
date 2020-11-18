@@ -166,6 +166,7 @@ class test_tm_params:
             if (
                 target_vehicle_waypoint.road_id != ego_vehicle_waypoint.road_id
                 or target_vehicle_waypoint.lane_id != ego_vehicle_waypoint.lane_id
+                or target_vehicle_waypoint.is_junction
             ):
                 continue
 
@@ -206,6 +207,10 @@ class test_tm_params:
 
         for vehicle in self.vehicle_list:
             # filter vehicles which are closer to this vehicle
+
+            if self.map.get_waypoint(vehicle.get_location()).is_junction:
+                continue
+
             filtered_vehicle_list = [
                 v
                 for v in self.vehicle_list
