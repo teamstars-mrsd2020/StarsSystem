@@ -5,6 +5,11 @@ data/*
 !data/HDMaps
 
 *.mp4
+*.pth
+*AB3DMOT/
+*Xinshuo_PyToolbox/
+*trajectory-extractor
+
 # File created using '.gitignore Generator' for Visual Studio Code: https://bit.ly/vscode-gig
 
 # Created by https://www.toptal.com/developers/gitignore/api/vscode,python,jupyternotebooks
